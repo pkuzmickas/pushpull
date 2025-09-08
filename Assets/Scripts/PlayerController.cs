@@ -104,7 +104,6 @@ public class PlayerController : MonoBehaviour
         // Cast a ray downward from the character's position to check if grounded
         Vector3 rayOrigin = transform.position + Vector3.up * 0.1f; // Start slightly above ground
         isGrounded = Physics.Raycast(rayOrigin, Vector3.down, groundCheckDistance + 0.1f, groundLayerMask);
-        Debug.Log("Is Grounded: " + isGrounded);
     }
     
     void Jump()

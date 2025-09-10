@@ -20,14 +20,15 @@ public class WeaponController : MonoBehaviour
     private Camera mainCamera;
     private Rigidbody weaponRb;
     private bool weaponLaunched = false;
+    private Collider playerCollider; // Reference to player's collider
 
     // Click handling variables
-    private Coroutine currentRotationMonitor;
     private int clickSequenceId = 0;
 
     void Start()
     {
         mainCamera = Camera.main;
+        playerCollider = GetComponent<Collider>();
 
         // If weapon spawn point is not set, use this transform
         if (weaponSpawnPoint == null)
@@ -51,12 +52,6 @@ public class WeaponController : MonoBehaviour
             int currentClickId = clickSequenceId;
 
             Vector3 mouseScreenPosition = Mouse.current.position.ReadValue();
-
-            // Cancel any previous rotation monitoring
-            if (currentRotationMonitor != null)
-            {
-                StopCoroutine(currentRotationMonitor);
-            }
 
             // Get mouse position and make player face that direction immediately
             Vector3 mouseWorldPosition = GetMouseWorldPosition();
@@ -94,6 +89,13 @@ public class WeaponController : MonoBehaviour
         {
             currentWeapon = Instantiate(weaponPrefab, weaponSpawnPoint.position, weaponSpawnPoint.rotation);
             weaponRb = currentWeapon.GetComponent<Rigidbody>();
+
+            // Set weapon collider as trigger initially to prevent collision with player
+            Collider weaponCollider = currentWeapon.GetComponent<Collider>();
+            if (weaponCollider != null)
+            {
+                weaponCollider.isTrigger = true;
+            }
 
             weaponLaunched = false;
         }
@@ -245,6 +247,18 @@ public class WeaponController : MonoBehaviour
         }
     }
 
+    public void OnWeaponLeftPlayerCollider()
+    {
+        // Called when weapon exits player's collision area
+        if (currentWeapon != null)
+        {
+            Collider weaponCollider = currentWeapon.GetComponent<Collider>();
+            if (weaponCollider != null && weaponCollider.isTrigger)
+            {
+                weaponCollider.isTrigger = false;
+            }
+        }
+    }
 }
 
 // Unified component for weapon collision detection and recall functionality
@@ -255,12 +269,14 @@ public class WeaponHandler : MonoBehaviour
     public bool isRecalling = false;
     private float launchTime;
     private const float COLLISION_IGNORE_TIME = 0.2f; // Ignore player collisions for 0.2 seconds after launch
+    private bool isInsidePlayerCollider = true; // Start assuming weapon is inside player collider
 
     public void Initialize(WeaponController controller)
     {
         weaponController = controller;
         launchTime = Time.time;
         isRecalling = false;
+        isInsidePlayerCollider = true;
     }
 
     public void SetRecalling(bool recalling)
@@ -268,26 +284,13 @@ public class WeaponHandler : MonoBehaviour
         isRecalling = recalling;
     }
 
-    void OnCollisionEnter(Collision collision)
+    void OnTriggerExit(Collider other)
     {
-        // Check if the weapon hit the player
-        if (collision.gameObject == weaponController.gameObject)
+        // Check if weapon is exiting player's collider
+        if (other.gameObject == weaponController.gameObject && isInsidePlayerCollider)
         {
-            // Only allow player collision if weapon is being recalled AND enough time has passed since launch
-            if (isRecalling && Time.time - launchTime > COLLISION_IGNORE_TIME)
-            {
-                weaponController.OnWeaponReturnedToPlayer();
-                return;
-            }
-            // Ignore player collision if not recalling or too soon after launch
-            return;
-        }
-
-        // If not player collision and hasn't collided yet, unfreeze Y position
-        if (!hasCollided)
-        {
-            hasCollided = true;
-            weaponController.OnWeaponCollision();
+            isInsidePlayerCollider = false;
+            weaponController.OnWeaponLeftPlayerCollider();
         }
     }
 
@@ -295,6 +298,38 @@ public class WeaponHandler : MonoBehaviour
     {
         // Check if the weapon hit the player
         if (other.gameObject == weaponController.gameObject)
+        {
+            // Only allow player collision if weapon is being recalled AND enough time has passed since launch
+            if (isRecalling && Time.time - launchTime > COLLISION_IGNORE_TIME && !isInsidePlayerCollider)
+            {
+                weaponController.OnWeaponReturnedToPlayer();
+                return;
+            }
+            // Track when weapon enters player collider area
+            if (isRecalling)
+            {
+                isInsidePlayerCollider = true;
+            }
+            return;
+        }
+
+        // If not player collision and hasn't collided yet, unfreeze Y position
+        if (!hasCollided && !isInsidePlayerCollider)
+        {
+            hasCollided = true;
+            weaponController.OnWeaponCollision();
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        // Only process collisions if weapon is no longer a trigger
+        Collider weaponCollider = GetComponent<Collider>();
+        if (weaponCollider != null && weaponCollider.isTrigger)
+            return;
+
+        // Check if the weapon hit the player
+        if (collision.gameObject == weaponController.gameObject)
         {
             // Only allow player collision if weapon is being recalled AND enough time has passed since launch
             if (isRecalling && Time.time - launchTime > COLLISION_IGNORE_TIME)

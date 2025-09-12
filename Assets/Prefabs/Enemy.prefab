@@ -898,9 +898,13 @@ MonoBehaviour:
   player: {fileID: 0}
   attackDistance: 2
   moveSpeed: 3.5
+  bloodEffectPrefab: {fileID: 2491991083019248253, guid: 753b303ad7b575a43a56aa25b79f7741, type: 3}
+  impactEffectPrefab: {fileID: 9090402380514247918, guid: 80f1afbe09303a14a97ecd4502b18ac6, type: 3}
+  effectLifetime: 3
   isRunning: 0
   isAttacking: 0
   distanceToPlayer: 0
+  currentState: 0
 --- !u!1 &416420068421937621
 GameObject:
   m_ObjectHideFlags: 0

@@ -87,29 +87,29 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter(Collider other)
-    {
-        // Check if the enemy was hit by a weapon
-        WeaponHandler weaponHandler = other.GetComponent<WeaponHandler>();
-        if (weaponHandler != null && currentState != State.Dead)
-        {
-            // Get collision point for effect positioning
-            Vector3 collisionPoint = other.ClosestPoint(transform.position);
-            TriggerDeath(collisionPoint);
-        }
-    }
+    //void OnTriggerEnter(Collider other)
+    //{
+    //    // Check if the enemy was hit by a weapon
+    //    WeaponHandler weaponHandler = other.GetComponent<WeaponHandler>();
+    //    if (weaponHandler != null && currentState != State.Dead)
+    //    {
+    //        // Get collision point for effect positioning
+    //        Vector3 collisionPoint = other.ClosestPoint(transform.position);
+    //        TriggerDeath(collisionPoint);
+    //    }
+    //}
 
-    void OnCollisionEnter(Collision collision)
-    {
-        // Check if the enemy was hit by a weapon (for non-trigger weapon colliders)
-        WeaponHandler weaponHandler = collision.gameObject.GetComponent<WeaponHandler>();
-        if (weaponHandler != null && currentState != State.Dead)
-        {
-            // Get collision point for effect positioning
-            Vector3 collisionPoint = collision.contacts.Length > 0 ? collision.contacts[0].point : transform.position;
-            TriggerDeath(collisionPoint);
-        }
-    }
+    //void OnCollisionEnter(Collision collision)
+    //{
+    //    // Check if the enemy was hit by a weapon (for non-trigger weapon colliders)
+    //    WeaponHandler weaponHandler = collision.gameObject.GetComponent<WeaponHandler>();
+    //    if (weaponHandler != null && currentState != State.Dead)
+    //    {
+    //        // Get collision point for effect positioning
+    //        Vector3 collisionPoint = collision.contacts.Length > 0 ? collision.contacts[0].point : transform.position;
+    //        TriggerDeath(collisionPoint);
+    //    }
+    //}
 
     void TriggerDeath(Vector3 impactPoint)
     {

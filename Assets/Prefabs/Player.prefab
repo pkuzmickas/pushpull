@@ -23686,7 +23686,6 @@ GameObject:
   - component: {fileID: 1103735769254503395}
   - component: {fileID: 3426817709305754278}
   - component: {fileID: 8427742056583380601}
-  - component: {fileID: 5662369147646945035}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -23756,6 +23755,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDistance: 0.1
+  weaponPrefab: {fileID: 0}
+  weaponSpawnPoint: {fileID: 0}
+  weaponRecallPoint: {fileID: 0}
+  playerHasWeapon: 0
 --- !u!54 &3426817709305754278
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -23806,27 +23809,6 @@ CapsuleCollider:
   m_Height: 1.8318205
   m_Direction: 1
   m_Center: {x: -0.00000000283743, y: 0.88456017, z: -0.0000000010239083}
---- !u!114 &5662369147646945035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7309118498308562070}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5dd3d35eaa0f2cd4ab321e2bba15bb8d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
-  weaponPrefab: {fileID: 8303464026540770183, guid: edcb98a8e3900d649a7159131bfece11, type: 3}
-  weaponSpawnPoint: {fileID: 1217817644746492730}
-  weaponRecallPoint: {fileID: 695293877773446284}
-  weaponSpeed: 15
-  playerLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
-  playerHasWeapon: 1
-  playerRotationSpeed: 10
 --- !u!1 &7318211640135472953
 GameObject:
   m_ObjectHideFlags: 0

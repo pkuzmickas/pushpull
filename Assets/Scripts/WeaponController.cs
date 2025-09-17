@@ -1,31 +1,29 @@
+using Unity.AppUI.UI;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class WeaponController : MonoBehaviour
 {
     public bool isRecalling = false;
     public float speed = 20f;
+    public GameObject flyingEffects;
 
-    Rigidbody rb; 
-
-
-    private WeaponController weaponController;
-    private bool hasCollided = false;
-    private float launchTime;
-    private const float COLLISION_IGNORE_TIME = 0.2f; // Ignore player collisions for 0.2 seconds after launch
-    private bool isInsidePlayerCollider = true; // Start assuming weapon is inside player collider
-
+    private Rigidbody rb;
+    private Collider weaponCollider;
+    private const float PLAYER_LAYER = 6;
+    private const float ENEMY_LAYER = 8;
+    private bool hasCollidedWithWall = false;
 
     void Start()
     {
-
+        weaponCollider = GetComponent<Collider>();
         rb = GetComponent<Rigidbody>();
 
+        isRecalling = false;
     }
 
     void Update()
     {
-        if(hasCollided)
+        if (hasCollidedWithWall)
         {
             if (rb != null)
             {
@@ -43,88 +41,51 @@ public class WeaponController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(!hasCollided)
+        if (!hasCollidedWithWall && !isRecalling)
         {
-           rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime); 
+            rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
         }
-    }
-
-
-    public void Initialize(WeaponController controller)
-    {
-        weaponController = controller;
-        launchTime = Time.time;
-        isRecalling = false;
-        isInsidePlayerCollider = true;
-    }
-
-    public void SetRecalling(bool recalling)
-    {
-        isRecalling = recalling;
     }
 
     void OnTriggerExit(Collider other)
     {
         // Check if weapon is exiting player's collider
-        if (other.gameObject == weaponController.gameObject && isInsidePlayerCollider)
+        if (isHitPlayer(other))
         {
-            isInsidePlayerCollider = false;
-            //weaponController.OnWeaponLeftPlayerCollider();
-        }
-    }
+            weaponCollider.isTrigger = false; // Disable trigger to allow collisions
 
-    void OnTriggerEnter(Collider other)
-    {
-        // Check if the weapon hit the player
-        if (other.gameObject == weaponController.gameObject)
-        {
-            // Only allow player collision if weapon is being recalled AND enough time has passed since launch
-            if (isRecalling && Time.time - launchTime > COLLISION_IGNORE_TIME && !isInsidePlayerCollider)
-            {
-                //weaponController.OnWeaponReturnedToPlayer();
-                return;
-            }
-            // Track when weapon enters player collider area
-            if (isRecalling)
-            {
-                isInsidePlayerCollider = true;
-            }
-            return;
-        }
-
-        // If not player collision and hasn't collided yet, unfreeze Y position
-        if (!hasCollided && !isInsidePlayerCollider)
-        {
-            hasCollided = true;
-            //weaponController.OnWeaponCollision();
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // Only process collisions if weapon is no longer a trigger
-        Collider weaponCollider = GetComponent<Collider>();
-        if (weaponCollider != null && weaponCollider.isTrigger)
-            return;
-
-        // Check if the weapon hit the player
-        if (collision.gameObject == weaponController.gameObject)
+        if (!isHitPlayer(collision.collider) && collision.gameObject.layer != ENEMY_LAYER)
         {
-            // Only allow player collision if weapon is being recalled AND enough time has passed since launch
-            if (isRecalling && Time.time - launchTime > COLLISION_IGNORE_TIME)
-            {
-                //weaponController.OnWeaponReturnedToPlayer();
-                return;
-            }
-            // Ignore player collision if not recalling or too soon after launch
-            return;
+            hasCollidedWithWall = true;
+            flyingEffects.SetActive(false);
         }
+    }
 
-        // If not player collision and hasn't collided yet, unfreeze Y position
-        if (!hasCollided)
+    bool isHitPlayer(Collider other)
+    {
+        return other.gameObject.layer == PLAYER_LAYER;
+    }
+
+    public void RecallWeapon(Vector3 location)
+    {
+        if (rb != null)
         {
-            hasCollided = true;
-            //weaponController.OnWeaponCollision();
+            Vector3 directionToPlayer = (location - transform.position).normalized;
+            rb.linearVelocity = directionToPlayer * speed;
+            Vector3 velocity = directionToPlayer * speed;
+            velocity.y *= 20f; // Double Y speed for faster vertical movement
+            //TODO: fix recall Y position
+
+            rb.linearVelocity = velocity;
+            //transform.position = new Vector3(transform.position.x, location.y, transform.position.z); 
+            isRecalling = true;
+            hasCollidedWithWall = false;
+            flyingEffects.SetActive(true);
         }
     }
 }

@@ -85,8 +85,9 @@ public class PlayerController : MonoBehaviour
     {
         if (animator != null && playerHasWeapon)
         {
-            animator.SetTrigger("shootTrigger");
+            //animator.SetTrigger("shootTrigger");
             currentWeapon = Instantiate(weaponPrefab, weaponSpawnPoint.position, weaponSpawnPoint.rotation);
+            playerHasWeapon = false;
         }
     }
 
@@ -168,34 +169,30 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        //// Right mouse click - recall weapon to player
-        //if (Mouse.current.rightButton.wasReleasedThisFrame)
-        //{
-        //    RecallWeaponToPlayer();
-        //}
+        // Right mouse click - recall weapon to player
+        if (Mouse.current.rightButton.wasReleasedThisFrame)
+        {
+            RecallWeaponToPlayer();
+        }
     }
-    //void RecallWeaponToPlayer()
-    //{
-    //    // Only recall if player doesn't have weapon and weapon exists and has been launched
-    //    if (!playerHasWeapon && currentWeapon != null && weaponLaunched && weaponRb != null)
-    //    {
-    //        // Calculate direction from weapon to player
-    //        Vector3 recallDirection = (weaponRecallPoint.position - currentWeapon.transform.position).normalized;
+    void RecallWeaponToPlayer()
+    {
+        // Only recall if player doesn't have weapon and weapon exists and has been launched
+        if (!playerHasWeapon && currentWeapon != null)
+        {
+            currentWeapon.GetComponent<WeaponController>().RecallWeapon(weaponRecallPoint.position);    
+        }
+    }
 
-    //        // Launch weapon towards player
-    //        weaponRb.linearVelocity = recallDirection * weaponSpeed;
-
-    //        // Set the weapon handler to recall mode
-    //        WeaponHandler weaponHandler = currentWeapon.GetComponent<WeaponHandler>();
-    //        if (weaponHandler == null)
-    //        {
-    //            weaponHandler = currentWeapon.AddComponent<WeaponHandler>();
-    //            weaponHandler.Initialize(this);
-    //        }
-    //        weaponHandler.SetRecalling(true);
-    //        weaponEffects.SetActive(true);
-    //    }
-    //}
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject == currentWeapon)
+        {
+            Debug.Log("Player hit by weapon"); 
+            playerHasWeapon = true;
+            Destroy(currentWeapon);
+        }
+    }
 
     //public void OnWeaponCollision()
     //{

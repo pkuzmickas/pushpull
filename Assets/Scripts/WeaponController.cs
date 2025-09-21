@@ -6,12 +6,17 @@ public class WeaponController : MonoBehaviour
     public bool isRecalling = false;
     public float speed = 20f;
     public GameObject flyingEffects;
+    public GameObject wallImpactEffect;
 
     private Rigidbody rb;
     private Collider weaponCollider;
     private const float PLAYER_LAYER = 6;
     private const float ENEMY_LAYER = 8;
+    private const float WALL_LAYER = 9;
     private bool hasCollidedWithWall = false;
+    private bool isAdjustingHeight = false;
+    private Vector3 targetPlayerLocation;
+    private float targetY;
 
     void Start()
     {
@@ -23,16 +28,13 @@ public class WeaponController : MonoBehaviour
 
     void Update()
     {
-        if (hasCollidedWithWall)
+        if (rb)
         {
-            if (rb != null)
+            if (hasCollidedWithWall)
             {
                 rb.constraints = RigidbodyConstraints.None;
             }
-        }
-        else
-        {
-            if (rb != null)
+            else
             {
                 rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
             }
@@ -44,6 +46,25 @@ public class WeaponController : MonoBehaviour
         if (!hasCollidedWithWall && !isRecalling)
         {
             rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
+        }
+        else if (isRecalling && isAdjustingHeight)
+        {
+            // Smoothly move to target Y position
+            float currentY = transform.position.y;
+            float newY = Mathf.MoveTowards(currentY, targetY, speed * Time.fixedDeltaTime);
+
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+
+            // Check if we've reached the target Y position
+            if (Mathf.Abs(newY - targetY) < 0.1f)
+            {
+                isAdjustingHeight = false;
+                // Now start moving towards the player with fixed Y
+                Vector3 directionToPlayer = (targetPlayerLocation - transform.position).normalized;
+                directionToPlayer.y = 0; // Keep Y movement at 0
+                rb.linearVelocity = directionToPlayer * speed;
+                rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
+            }
         }
     }
 
@@ -59,10 +80,12 @@ public class WeaponController : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if (!isHitPlayer(collision.collider) && collision.gameObject.layer != ENEMY_LAYER)
+        if (!isHitPlayer(collision.collider) && collision.gameObject.layer != ENEMY_LAYER && collision.gameObject.layer == WALL_LAYER)
         {
             hasCollidedWithWall = true;
             flyingEffects.SetActive(false);
+            GameObject impactEffect = Instantiate(wallImpactEffect, collision.contacts[0].point, Quaternion.LookRotation(collision.contacts[0].normal));
+            Destroy(impactEffect, 0.7f);
         }
     }
 
@@ -75,17 +98,19 @@ public class WeaponController : MonoBehaviour
     {
         if (rb != null)
         {
-            Vector3 directionToPlayer = (location - transform.position).normalized;
-            rb.linearVelocity = directionToPlayer * speed;
-            Vector3 velocity = directionToPlayer * speed;
-            velocity.y *= 20f; // Double Y speed for faster vertical movement
-            //TODO: fix recall Y position
+            // Store target location and Y position
+            targetPlayerLocation = location;
+            targetY = location.y;
 
-            rb.linearVelocity = velocity;
-            //transform.position = new Vector3(transform.position.x, location.y, transform.position.z); 
+            // Start the recall process
             isRecalling = true;
+            isAdjustingHeight = true;
             hasCollidedWithWall = false;
             flyingEffects.SetActive(true);
+
+            // Remove rigidbody constraints temporarily to allow Y movement
+            rb.constraints = RigidbodyConstraints.FreezeRotation;
+            rb.linearVelocity = Vector3.zero; // Stop current movement
         }
     }
 }

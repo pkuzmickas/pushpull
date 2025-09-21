@@ -156,6 +156,7 @@ MonoBehaviour:
   isRecalling: 0
   speed: 15
   flyingEffects: {fileID: 5320386684583075904}
+  wallImpactEffect: {fileID: 6348098385676661875, guid: 8c17a1d0280ffa1458aa076c12074012, type: 3}
 --- !u!1001 &5320386684583110374
 PrefabInstance:
   m_ObjectHideFlags: 0
